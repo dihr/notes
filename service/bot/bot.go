@@ -67,7 +67,7 @@ func (t *telegramBotImp) Run() error {
 				return err
 			}
 			if hasImage {
-				photoBytes, err := ioutil.ReadFile(fmt.Sprintf("%s.png",
+				photoBytes, err := ioutil.ReadFile(fmt.Sprintf("/images/%s.png",
 					update.Message.Command()))
 				if err != nil {
 					return err
