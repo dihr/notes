@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"io/ioutil"
 	"log"
 	"notes/repository"
 	"os"
@@ -53,17 +54,32 @@ func (t *telegramBotImp) Run() error {
 			if err != nil {
 				msg.Text = err.Error()
 			}
+			if _, err := bot.Send(msg); err != nil {
+				return err
+			}
 		default:
-			msg.Text, err = t.callForSubCategoryOrCategory(update.Message.Command())
+			var hasImage bool
+			msg.Text, hasImage, err = t.callForSubCategoryOrCategory(update.Message.Command())
 			if err != nil {
 				msg.Text = err.Error()
 			}
-		}
-		if msg.Text == "" {
-			msg.Text = "invalid command"
-		}
-		if _, err := bot.Send(msg); err != nil {
-			return err
+			if _, err := bot.Send(msg); err != nil {
+				return err
+			}
+			if hasImage {
+				photoBytes, err := ioutil.ReadFile(fmt.Sprintf("%s.png",
+					update.Message.Command()))
+				if err != nil {
+					return err
+				}
+				photoFileBytes := tgbotapi.FileBytes{
+					Name:  "picture",
+					Bytes: photoBytes,
+				}
+				if _, err := bot.Send(tgbotapi.NewPhoto(msg.ChatID, photoFileBytes)); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
@@ -81,17 +97,18 @@ func (t *telegramBotImp) callForHelpOrCategories() (string, error) {
 	return message, nil
 }
 
-func (t *telegramBotImp) callForSubCategoryOrCategory(command string) (string, error) {
+func (t *telegramBotImp) callForSubCategoryOrCategory(command string) (string, bool, error) {
 	var message string
+	var hasFile bool
 	categories, err := t.db.GetAllCategories()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	for _, c := range categories {
 		if command == c.Name {
 			subCategories, err := t.db.GetSubCategories("category_id = ?", c.ID)
 			if err != nil {
-				return "", err
+				return "", false, err
 			}
 			for _, sc := range subCategories {
 				message += fmt.Sprintf("/%s\n", sc.Name)
@@ -100,10 +117,11 @@ func (t *telegramBotImp) callForSubCategoryOrCategory(command string) (string, e
 	}
 	subCategories, err := t.db.GetAllSubCategories()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	for _, sub := range subCategories {
 		if sub.Name == command {
+			hasFile = sub.FlagImg
 			// Use pipes to separate new lines in text from database.
 			messageSplit := strings.Split(sub.Text, "|")
 			for _, m := range messageSplit {
@@ -111,5 +129,5 @@ func (t *telegramBotImp) callForSubCategoryOrCategory(command string) (string, e
 			}
 		}
 	}
-	return message, nil
+	return message, hasFile, nil
 }

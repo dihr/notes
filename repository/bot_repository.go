@@ -34,7 +34,8 @@ func (b *botRepositoryImp) GetAllSubCategories() ([]model.SubCategory, error) {
 	for rows.Next() {
 		tempSubCategory := model.SubCategory{}
 		if err := rows.Scan(&tempSubCategory.ID, &tempSubCategory.CategoryID,
-			&tempSubCategory.Name, &tempSubCategory.Text); err != nil {
+			&tempSubCategory.Name, &tempSubCategory.Text, &tempSubCategory.FlagImg,
+			&tempSubCategory.ImgName); err != nil {
 			return nil, err
 		}
 		subCategories = append(subCategories, tempSubCategory)
@@ -52,7 +53,8 @@ func (b *botRepositoryImp) GetSubCategories(parameters string, args ...interface
 	for rows.Next() {
 		tempSubCategory := model.SubCategory{}
 		if err := rows.Scan(&tempSubCategory.ID, &tempSubCategory.CategoryID,
-			&tempSubCategory.Name, &tempSubCategory.Text); err != nil {
+			&tempSubCategory.Name, &tempSubCategory.Text, &tempSubCategory.FlagImg,
+			&tempSubCategory.ImgName); err != nil {
 			return nil, err
 		}
 		subCategories = append(subCategories, tempSubCategory)
@@ -68,7 +70,8 @@ func (b *botRepositoryImp) GetSubCategory(parameters string, args ...interface{}
 	}
 	subCategory := model.SubCategory{}
 	if err := row.Scan(&subCategory.ID, &subCategory.CategoryID,
-		&subCategory.Name, &subCategory.Text); err != nil {
+		&subCategory.Name, &subCategory.Text, &subCategory.FlagImg,
+		&subCategory.ImgName); err != nil {
 		return model.SubCategory{}, err
 	}
 	return subCategory, nil
