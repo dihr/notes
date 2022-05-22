@@ -33,7 +33,6 @@ func (t *telegramBotImp) Run() error {
 	if err != nil {
 		log.Panic(err)
 	}
-
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
